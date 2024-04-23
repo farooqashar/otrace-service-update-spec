@@ -1,10 +1,10 @@
 <a name="readme-top"></a>
-<a href="https://github.mit.edu/pages/Future-of-Data-Initiative/otrace-services/">Home</a> |
-<a href="https://github.mit.edu/Future-of-Data-Initiative/otrace-services">Github</a> |
+<a href="https://mit-future-of-data-initiative.github.io/otrace-service/">Home</a> |
 <a href="./docs/spec.html">API Spec</a>
+<a href="https://futureofdata.mit.edu/tr/2023/fod-account-trace-20230418.pdf">Accountability and Traceability White Paper</a>
 
 ## Open Banking Research Sandbox
-The [MIT Future of Data Initiatives](https://futureofdata.mit.edu) Research Sandbox offers resources, such as
+The [MIT Future of Data Initiative](https://futureofdata.mit.edu) Research Sandbox offers resources, such as
 data sets, technical specifications, code implementations, and relevant
 policies, to aid in the exploration of accountability and traceability in the
 open banking ecosystem.
@@ -160,7 +160,7 @@ innovations and solutions.
 
 ## License
 
-Distributed under the MIT License. See [`LICENSE.txt`](/LICENSE.txt) for more
+Distributed under the MIT License. See [`LICENSE`](/LICENSE) for more
 information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
