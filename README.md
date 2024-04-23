@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
-<a href="https://mit-future-of-data-initiative.github.io/otrace-service/">Home</a> |
-<a href="./docs/spec.html">API Spec</a>
-<a href="https://futureofdata.mit.edu/tr/2023/fod-account-trace-20230418.pdf">Accountability and Traceability White Paper</a>
+<a href="https://mit-future-of-data-initiative.github.io/otrace-service/"> Home </a> |
+<a href="./docs/spec.html"> API Spec </a>  |
+<a href="https://futureofdata.mit.edu/tr/2023/fod-account-trace-20230418.pdf"> White Paper </a>
 
 ## Open Banking Research Sandbox
 The [MIT Future of Data Initiative](https://futureofdata.mit.edu) Research Sandbox offers resources, such as
