@@ -1,0 +1,585 @@
+openapi: 3.0.0
+info:
+  title: OTrace Services
+  version: '0.3'
+  description: "# Introduction\n\nIn order to improve trust in the open banking ecosystem, this work proposes a\nprotocol for *traceability*---the ability for consumers to track how data\nis being used and shared, even (and especially) across organizational\nboundaries. Traceability will help achieve reliable, scalable detection of data\nmisuse, leading to both better internal processes and more effective\nintervention by enforcement authorities when necessary.\n\nThe main participants in the open banking ecosystem are:\n1. *Consumers.* Individuals who want to use digital financial services.\n2. *Data providers.* Companies (e.g., traditional banks, payment providers,\n   credit card providers) that hold consumer financial data.\n3. *Data recipients.* Companies (e.g., fintechs, payment processors, credit\n   reference agencies, regulators) that use consumer financial data to provide\n   requested services.\n4. *Data access platforms.* Intermediaries (e.g., API providers, data\n   aggregators) that support data exchange between data providers and data\n   recipients.\n\nTo facilitate traceability, we introduce the idea of a *traceability\nservice*, which stores traceability information on behalf of\nconsumers. Traceability services have three deployment models:\n\n1. *Self-hosted.* Consumers self-host traceability services on their personal\n   machines or in the cloud.\n2. *Third-party-hosted.* Third-party providers (e.g., nongovernmental\n   organizations, private companies) host traceability services.\n3. *Provider-hosted.* Data providers host traceability services (given their\n   existing trust relationships with consumers).\n\nThese traceability services will record various types of traceability *attestations*:\n\n1. *Policy attestations.* These describe agreed-upon terms of *granular*\n   consent, delineating the relevant data types, their intended usage, the\n   duration of data retention, the conditions under which data may be reshared,\n   and logging requirements.\n2. *Sharing attestations.* These describe sharing actions on data elements\n   includes information, such as the timestamps and purposes of sharing.\n3. *Activity attestations.* These describe local actions on data elements (e.g.,\n   use, deletion) and includes information, such as the timestamps and purposes\n   of the actions.\n4. *Rights attestations.* These describe actions associated with data rights\n   requests, such as consent grant, consent revocation, data access, data\n   correction, and data deletion.\n   \nA traceability protocol is comprised of several subprotocols:\n\n1. *Traceability setup.* This is a three-party protocol, involving a consumer,\n    data controller (i.e., a data provider or a data recipient), and\n    traceability service. The consumer authorizes the controller to interact\n    with the traceability service on its behalf. Concretely, this can be\n    implemented using OAuth, where the controller (either a data provider or a\n    data recipient) is an OAuth client and the traceability service acts as the\n    authorization and resource servers.\n2. *Data sharing setup.* This is a four-party protocol, involving a consumer,\n\tdata provider, data recipient, and traceability service. The consumer\n\tinitiates data sharing between the provider and the recipient (e.g., using\n\tthe FDX protocol), and the recipient and provider both post consent records\n\tto the traceability service.\n3. *Data sharing.* This is a three-party protocol, involving a data provider,\n   data recipient, and traceability service. The recipient requests data from the\n   provider (e.g., using the FDX protocol), and receives the data and a \"consentID\"\n   in return. Finally, the recipient and provider both post sharing attestations to\n   the traceability service.\n4. *Data use.* This is a two-party protocol, involving a data controller and\n   traceability service. The controller posts an activity attestation to the\n   traceability service.\n5. *Consumer rights request.* This is a three-party protocol, involving a\n   consumer, controller, and traceability service based on the Data Rights\n   Protocol (DRP). The consumer initiates a rights request with the traceability\n   service, which forwards the request to the controller. The controller posts a\n   rights attestation to the traceability service.\n\n\n# Terms and Definitions\n\n| Terms | Definition |\n|-------|------------|\n| JWS  | [JSON Web Signature](https://datatracker.ietf.org/doc/rfc7797/) |\n| JWT  | [JSON Web Token](https://datatracker.ietf.org/doc/html/rfc7519) |\n\n\n# Change History\n\n| Version | Description | Date | Author |\n|-------|------------|------------|------------|\n| **0.1** | Initital Verision                             | 3/17/2024 | Dean Wen   | \n| **0.2** | Updated Introduction                          | 3/30/2024 | Kevin Liao | \n| **0.3** | Added user dashboard and violation notify API | 4/12/2024 | Dean Wen   | "
+  contact:
+    name: MIT Internet Policy Research Initiative
+    url: 'https://internetpolicy.mit.edu'
+    email: ipri-contact@mit.edu
+  license:
+    name: MIT License
+    url: 'https://mit-license.org'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /1/1/create-consent:
+    post:
+      summary: Create Consent
+      operationId: post-1-1-policy
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trace_id:
+                    type: string
+                    description: The trace_id generated by the Traceability Server to identify the Traceability Policy Record and all subsequent records under the policy. This MUST be unique to this set of Traceability Record Set.
+                required:
+                  - trace_id
+              examples:
+                example:
+                  value:
+                    trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                time:
+                  type: string
+                  description: |
+                    Time at which the Traceability Record was generated by the sender. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                data_subject:
+                  type: string
+                  description: The WebID HTTP URI representing the User who owns the data that this policy concerns. This WebID Profile MUST be unique to the User relative to the Data Provider and SHOULD NOT provide any compromising information to those who view the WebID Profile
+                description:
+                  type: string
+                  description: 'A human-readable summary for the User describing the rel- evant data categories and the purpose of consent, as phrased to the User during acknowledgment.'
+                consents:
+                  type: string
+                  description: A JSON structure which describes the data categories that the User consent covers and what data uses are permitted upon each data category. The consents available SHOULD offer granularity in consent choices
+                parent_ids:
+                  type: string
+                  description: A JSON array of trace_ids of other Traceability Policy Records that this Traceability Policy Record derives consent from.
+                provider_challenges:
+                  type: string
+                  description: |
+                    This PKCE code challenge is derived from [44] and [48]. The value is the base64url encoding (per Section 5 of [RFC4648] with all trailing padding (’=’) characters omitted and without the inclusion of any line breaks or whitespace) of the SHA-256 hash of the public key from the Data Provider’s Traceability Key-pair.
+                provider_challenge_method:
+                  type: string
+                  description: 'Value MUST be set to "TB-S256"'
+                recipient_challenge:
+                  type: string
+                  description: |
+                    This PKCE code challenge is derived from [44] and [48]. The value is the base64url encoding (per Section 5 of [RFC4648] with all trailing padding (’=’) characters omitted and without the inclusion of any line breaks or whitespace) of the SHA-256 hash of the public key from the Data Recipient’s Traceability Key-pair.
+                recipient_challenge_method:
+                  type: string
+                  description: 'Value MUST be set to "TB-S256"'
+                trace_uri:
+                  type: string
+                  description: A URI identifying the Traceability Server for this consent.
+                trace_cert:
+                  type: string
+                  description: The Data Provider may submit a certificate by which the Traceability Server can identify itself. This certificate should be the base64url-encoding of the certificate
+              required:
+                - time
+                - data_subject
+                - description
+                - consents
+                - provider_challenges
+                - provider_challenge_method
+                - recipient_challenge
+                - recipient_challenge_method
+                - trace_uri
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  time: '2024-01-01T0:0:0Z'
+                  data_subject: '168000099'
+                  description: User Contact Sharing
+                  consents:
+                    - category: user.contact
+                      uses: marketing.communications
+                      subject: anonymous_user
+                    - category: user.demographic
+                      uses: marketing.advertising
+                      subject: anonymous_user
+                  parent_ids:
+                    - 6e9c599f-5676-46d7-809f-70f9bffed436
+                    - c780a86d-f902-4801-bdad-c9b14b2a8032
+                  provider_challenge: aGVsbG8gd29ybGQ=
+                  provider_challenge_method: TB-S256
+                  recipient_challenge: aGVsbG8gd29ybGQ=
+                  recipient_challenge_method: TB-S256
+                  trace_uri: 'https://tracer.com/aGVsbG8'
+                  trace_cert: '-----BEGIN CERTIFICATE-----MIICMzCCAZygAwIBAgIJALiPnVsvq8dsMA0GCSqGSIb3DQEBBQUAMFMxCzAJBgNVBAYTAlVTMQwwCgYDVQQIEwNm-----END CERTIFICATE-----'
+        description: ''
+      tags:
+        - Consent
+      description: 'User to initiate data sharing with a Data Provider on behalf of a Data Recipient, the User MUST have independent relationships with both the Data Recipient and the Data Provider. The User MUST initiate the consent request from within the Data Recipient’s experience/application. Before beginning the consent request, the Data Recipient determines the types of data access it intends to access from Data Provider and MUST disclose its intent to the User. '
+    parameters: []
+  /1/1/share-data:
+    post:
+      summary: Share Data
+      responses:
+        '201':
+          description: Created
+      operationId: post-1-1-share
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trace_id:
+                  type: string
+                  description: |
+                    The trace_id for this Traceability Record Set.
+                time:
+                  type: string
+                  description: |
+                    Time at which the Traceability Record was generated by the sender. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                data_shared:
+                  type: string
+                  description: A JSON structure which describes the data categories that the shared data falls within and what data uses are permitted upon each data category. This should follow the format used for the consents param- eter of the Traceability Policy Record
+                description:
+                  type: string
+                  description: A human-readable summary for the User describing the rel- evant data being shared and the purpose of share.
+              required:
+                - trace_id
+                - time
+                - data_shared
+                - description
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  time: '2024-01-01T0:0:0Z'
+                  description: User Contact Sharing
+                  data_shared:
+                    - category: user.contact
+                      uses: marketing.communications
+                      subject: anonymous_user
+                    - category: user.demographic
+                      uses: marketing.advertising
+                      subject: anonymous_user
+      tags:
+        - Data
+    parameters: []
+  /1/1/use-data:
+    post:
+      summary: Use Data
+      responses:
+        '201':
+          description: Created
+      operationId: post-1-1-usage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trace_id:
+                  type: string
+                  description: |
+                    The trace_id for this Traceability Record Set.
+                time:
+                  type: string
+                  description: |
+                    Time at which the Traceability Record was generated by the sender. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                data_used:
+                  type: string
+                  description: |
+                    JSON structure which describes the data categories that the used data falls within and what data uses are taking place upon each data category. This should follow the format used for the consents param- eter of the Traceability Policy Record.
+                description:
+                  type: string
+                  description: |
+                    A human-readable summary for the User describing the rel- evant data being used and the purpose for use.
+              required:
+                - trace_id
+                - time
+                - data_used
+                - description
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  time: '2024-01-01T0:0:0Z'
+                  description: Data Usage
+                  data_used:
+                    - category: user.contact
+                      uses: marketing.communications
+                      subject: anonymous_user
+                    - category: user.demographic
+                      uses: marketing.advertising
+                      subject: anonymous_user
+        description: ''
+      tags:
+        - Data
+    parameters: []
+  /1/1/delete-consent:
+    post:
+      summary: Delete Consent
+      responses:
+        '200':
+          description: OK
+      operationId: get-1-1-delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trace_id:
+                  type: string
+                  description: The trace_id for this Traceability Record Set.
+              required:
+                - trace_id
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+      tags:
+        - Consent
+    parameters: []
+  /1/1/change-consent:
+    post:
+      summary: Change Consent
+      operationId: post-1-1-update
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              'null':
+                type: string
+                description: A JSON array of trace_ids of other Traceability Policy Records that this Traceability Policy Record derives consent from.
+              properties:
+                trace_id:
+                  type: string
+                  description: The trace_id for this Traceability Record Set.
+                description:
+                  type: string
+                  description: 'A human-readable summary for the User describing the rel- evant data categories and the purpose of consent, as phrased to the User during acknowledgment.'
+                consents:
+                  type: string
+                  description: A JSON structure which describes the data categories that the User consent covers and what data uses are permitted upon each data category. The consents available SHOULD offer granularity in consent choices
+                parent_ids:
+                  type: string
+                  description: A JSON array of trace_ids of other Traceability Policy Records that this Traceability Policy Record derives consent from.
+              required:
+                - trace_id
+                - description
+                - consents
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  description: Remove marketing.communications
+                  consents:
+                    - category: user.demographic
+                      uses: marketing.advertising
+                      subject: anonymous_user
+                  parent_ids:
+                    - 6e9c599f-5676-46d7-809f-70f9bffed436
+                    - c780a86d-f902-4801-bdad-c9b14b2a8032
+      tags:
+        - Consent
+    parameters: []
+  /1/1/migrate:
+    post:
+      summary: Initiate Migration
+      operationId: post-1-1-migrate
+      responses:
+        '202':
+          description: Accepted
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trace_id:
+                  type: string
+                  description: |
+                    The trace_id for this Traceability Record Set.
+                time:
+                  type: string
+                  description: |
+                    Time at which the Traceability Record was generated by the sender. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                force:
+                  type: boolean
+                  description: |
+                    "true" if the Data Provider and Data Recipient should start
+                    using the new Traceability Server immediately, submitting this Traceability Migration Record to the new Traceability Server.
+                migrated_uri:
+                  type: string
+                  description: A URI identifying the Data Provider’s callback for when Traceability Server migration is complete.
+                trace_uri:
+                  type: string
+                  description: |
+                    A URI identifying the new Traceability Server for this Trace- ability Record Set.
+                trace_cert:
+                  type: string
+                  description: The Data Provider may submit a certificate by which the Traceability Server can identify itself.
+              required:
+                - trace_id
+                - time
+            examples:
+              example:
+                value:
+                  trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  time: '2024-01-01T0:0:0Z'
+                  force: true
+                  migration_uri: 'https://tracer.com/aGVsbG8'
+                  trace_uri: 'https://tracer.com/aGVsbG8'
+                  trace_cert: '-----BEGIN CERTIFICATE-----MIICMzCCAZygAwIBAgIJALiPnVsvq8dsMA0GCSqGSIb3DQEBBQUAMFMxCzAJBgNVBAYTAlVTMQwwCgYDVQQIEwNm-----END CERTIFICATE-----'
+      tags:
+        - Migration
+  /1/1/recieve:
+    post:
+      summary: Receive Migration
+      operationId: post-1-1-recieve
+      responses:
+        '201':
+          description: Created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: |
+                    Indicates the type of the Traceability Record. Value is either "policy", "share", "use", "change", or "migration".
+                time:
+                  type: string
+                  description: |
+                    Time at which the Traceability Record was received by the Traceability Server. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                trace:
+                  type: string
+                  description: 'The Traceability Record represented as a JWS signed JWT, as originally received by the Traceability Server'
+              required:
+                - type
+                - time
+                - trace
+            examples:
+              example:
+                value:
+                  type: POLICY
+                  time: '2024-01-01T0:0:0Z'
+                  trace:
+                    trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                    time: '2024-01-01T0:0:0Z'
+                    data_subject: '168000099'
+                    description: User Contact Sharing
+                    consents:
+                      - category: user.contact
+                        uses: marketing.communications
+                        subject: anonymous_user
+                      - category: user.demographic
+                        uses: marketing.advertising
+                        subject: anonymous_user
+                    parent_ids:
+                      - 6e9c599f-5676-46d7-809f-70f9bffed436
+                      - c780a86d-f902-4801-bdad-c9b14b2a8032
+                    provider_challenge: aGVsbG8gd29ybGQ=
+                    provider_challenge_method: TB-S256
+                    recipient_challenge: aGVsbG8gd29ybGQ=
+                    recipient_challenge_method: TB-S256
+                    trace_uri: 'https://tracer.com/aGVsbG8'
+                    trace_cert: '-----BEGIN CERTIFICATE-----MIICMzCCAZygAwIBAgIJALiPnVsvq8dsMA0GCSqGSIb3DQEBBQUAMFMxCzAJBgNVBAYTAlVTMQwwCgYDVQQIEwNm-----END CERTIFICATE-----'
+      tags:
+        - Migration
+  /1/1/notify:
+    post:
+      summary: Notify Migration Status
+      operationId: post-1-1-notify
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_trace_id:
+                  type: string
+                  description: |
+                    The trace_id on the Traceability Migration Request.
+                new_trace_id:
+                  type: string
+                  description: A new trace_id to uniquely represent the migrated Trace- ability Record Set on the new Traceability Server
+              required:
+                - old_trace_id
+                - new_trace_id
+            examples:
+              example:
+                value:
+                  old_trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                  new-trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+      tags:
+        - Migration
+  /1/1/user-dashboard:
+    post:
+      summary: User Dashboard
+      operationId: post-1-1-user-dashboard
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        trace_id:
+                          type: string
+                        time:
+                          type: string
+                        description:
+                          type: string
+                        consents:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/consent'
+                        parent_ids:
+                          type: array
+                          items:
+                            type: string
+                        violations:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/violation'
+              examples:
+                example:
+                  value:
+                    records:
+                      - trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb2213
+                        time: '2024-01-01T0:0:0Z'
+                        description: User Contact Sharing
+                        consents:
+                          - category: user.contact
+                            uses: marketing.communications
+                            subject: anonymous_user
+                        parent_ids:
+                          - 6e9c599f-5676-46d7-809f-70f9bffed436
+                          - c780a86d-f902-4801-bdad-c9b14b2a8032
+                        violations:
+                          - actor_name: intuit
+                            time: '2024-01-01T0:0:0Z'
+                            data_used: user.contact
+                            unauthorized_usage:
+                              - ai.training
+                      - trace_id: 475eb7d8-dec4-49f4-a5b6-3d76aebb5865
+                        time: '2024-01-01T0:0:0Z'
+                        description: User Demographic Sharing
+                        consents:
+                          - category: user.demographic
+                            uses: marketing.advertising
+                            subject: anonymous_user
+                        parent_ids:
+                          - 6e9c599f-5676-46d7-809f-70f9bffed436
+                          - c780a86d-f902-4801-bdad-c9b14b2a8032
+                        violations:
+                          - actor_name: intuit
+                            time: '2024-01-01T0:0:0Z'
+                            data_used: user.contact
+                            unauthorized_usage:
+                              - ai.training
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data_subject:
+                  type: string
+              required:
+                - data_subject
+            examples:
+              example:
+                value:
+                  data_subject: 3d76aebb5865
+      tags:
+        - Data
+    parameters: []
+  /1/1/notify-violation:
+    post:
+      summary: Notify Violation
+      operationId: post-1-1-notify-violation
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  trace_id:
+                    type: string
+                  violation:
+                    type: string
+            examples:
+              example:
+                value:
+                  - trace_id: 6e9c599f-5676-46d7-809f-70f9bffed436
+                    violation:
+                      actor_name: intuit
+                      time: '2024-01-01T0:0:0Z'
+                      data_used: user.contact
+                      unauthorized_usage:
+                        - ai.training
+                  - trace_id: 6e9c599f-5676-46d7-809f-70f9bffed436
+                    violation:
+                      actor_name: intuit
+                      time: '2024-01-01T0:0:0Z'
+                      data_used: user.demographic
+                      unauthorized_usage:
+                        - ai.training
+      tags:
+        - Data
+components:
+  schemas:
+    violation:
+      title: violation
+      type: object
+      properties:
+        actor_name:
+          type: string
+        time:
+          type: string
+        data_used:
+          type: string
+        unauthorized_usage:
+          type: array
+          items:
+            type: string
+    consent:
+      title: consent
+      type: object
+      properties:
+        category:
+          type: string
+        uses:
+          type: string
+        subject:
+          type: string
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer

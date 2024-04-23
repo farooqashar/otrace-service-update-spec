@@ -1,0 +1,61 @@
+service: traceability-service
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: provided.al2
+  architecture: arm64
+  region: us-west-1
+  stage: sandbox
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:Scan"
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:Query"
+      Resource:
+        - "Fn::GetAtt": [ tracingTable, Arn ]
+
+plugins:
+  - serverless-go-plugin
+
+custom:
+  go:
+    supportedRuntimes: ["provided.al2"]
+    buildProvidedRuntimeAsBootstrap: true
+
+package:
+  patterns:
+    - '!./**'
+  individually: true
+
+functions:
+  consent_creation:
+    handler: handlers/consent_creation/main.go
+    events:
+      - http:
+          path: /policy
+          method: POST
+  data_sharing:
+    handler: handlers/data_sharing/main.go
+    events:
+      - http:
+          path: /share
+          method: POST
+
+resources:
+  Resources:
+    tracingTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tracingTable
+        AttributeDefinitions:
+          - AttributeName: trace_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: trace_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
