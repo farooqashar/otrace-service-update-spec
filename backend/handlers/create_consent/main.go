@@ -44,9 +44,10 @@ func main() {
 }
 
 func CreateConsentHandler(c *gin.Context) {
-	var requestBody models.ConsentRequest
+	var requestBody models.CreateConsentRequest
 	if err := c.BindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, "empty request body")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	traceID := uuid.NewString()
