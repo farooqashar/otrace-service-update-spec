@@ -167,9 +167,9 @@ information.
 
 ## Contact
 
-- Kevin Liao - kevliao@mit.edu
-- Quinn Magendanz - qpm3@mit.edu
-- Dean Wen dianwen@mit.edu
-- Daniel Weitzner weitzner@mit.edu
+- Kevin Liao - [kevliao@mit.edu](mailto:kevliao@mit.edu)
+- Quinn Magendanz - [qpm3@mit.edu](mailto:qpm3@mit.edu)
+- Dean Wen - [dianwen@mit.edu](mailto:dianwen@mit.edu)
+- Daniel Weitzner - [weitzner@mit.edu](mailto:weitzner@mit.edu)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
