@@ -31,17 +31,47 @@ package:
   individually: true
 
 functions:
-  consent_creation:
-    handler: handlers/consent_creation/main.go
+  create_consent:
+    handler: handlers/create_consent/main.go
     events:
       - http:
-          path: /policy
+          path: /create-consent
           method: POST
-  data_sharing:
-    handler: handlers/data_sharing/main.go
+  change_consent:
+    handler: handlers/change_consent/main.go
     events:
       - http:
-          path: /share
+          path: /change-consent
+          method: POST
+  delete_consent:
+    handler: handlers/delete_consent/main.go
+    events:
+      - http:
+          path: /delete-consent
+          method: POST
+  share_data:
+    handler: handlers/share_data/main.go
+    events:
+      - http:
+          path: /share-data
+          method: POST
+  use_data:
+    handler: handlers/use_data/main.go
+    events:
+      - http:
+          path: /use-data
+          method: POST
+  user_dashboard:
+    handler: handlers/user_dashboard/main.go
+    events:
+      - http:
+          path: /user-dashboard
+          method: POST
+  notify_violation:
+    handler: handlers/notify_violation/main.go
+    events:
+      - http:
+          path: /notify-violation
           method: POST
 
 resources:

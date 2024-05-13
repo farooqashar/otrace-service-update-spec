@@ -63,7 +63,7 @@ paths:
                 parent_ids:
                   type: string
                   description: A JSON array containing trace_ids from other existing Traceability Policy Records derives this consent.
-                provider_challenges:
+                provider_challenge:
                   type: string
                   description: |
                     Proof Key for Code Exchange. The value is the base64url en- coding of the SHA-256 hash of the public key from the Data Provider’s Traceability Key-pair.
@@ -88,7 +88,7 @@ paths:
                 - data_subject
                 - description
                 - consents
-                - provider_challenges
+                - provider_challenge
                 - provider_challenge_method
                 - recipient_challenge
                 - recipient_challenge_method

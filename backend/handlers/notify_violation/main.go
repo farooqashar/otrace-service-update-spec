@@ -15,7 +15,7 @@ var ginLambda *ginadapter.GinLambda
 func init() {
 	log.Printf("Service Starting")
 	r := gin.Default()
-	r.POST("/share", DataSharingHandler)
+	r.POST("/notify-violation", NotifyViolationHandler)
 	ginLambda = ginadapter.New(r)
 }
 
@@ -26,6 +26,7 @@ func main() {
 	lambda.Start(HandleRequest)
 }
 
-func DataSharingHandler(c *gin.Context) {
-	c.JSON(http.StatusCreated, "Data Sharing Recorded")
+func NotifyViolationHandler(c *gin.Context) {
+	//TODO: ADD IMPLEMENTATION
+	c.JSON(http.StatusNotImplemented, "API Not Implemented")
 }

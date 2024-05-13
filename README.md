@@ -132,10 +132,24 @@ A traceability protocol is comprised of several subprotocols:
 
 ## Getting started
 
-To set up the project, first install the [Go programming
-language](https://go.dev/doc/install).
+#### Prepare
+To set up the project, first install the [Go programming language](https://go.dev/doc/install). Then 
 
-TBD
+#### Structure
+This project is a RESTful web service API with Go and the [Gin Web Framework](https://gin-gonic.com/docs/)
+1. handlers - API Handlers, API functions/business logic
+2. models - Data Transfer Objects, Data Access Objects
+3. utils - utility functions
+4. config - configuration
+5. tests - unit and integration tests 
+
+####  Developing and Deploying on Cloud
+Create AWS account, free tier will be sufficient. Install [Serverless Framework](https://www.serverless.com/framework/docs-getting-started) And configure your AWS Credentials for serverless.
+1. Go to AWS Identity and Access Management (IAM) Service
+2. Create a new User in IAM, and grant AdministratorAccess
+3. Create Access Key for this User
+4. Open Terminal and go to /backend folder, and run this command `serverless config credentials --provider aws --key YOUR_ACCESS_KEY --secret YOUR_SECRET_KEY --profile YOUR_PROFILE_NAME`
+5. run `sls deploy`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -144,7 +158,7 @@ TBD
 ### Documents
 **Github Page** README.md is the index page. New pages shall be written in markdown file under docs folder. Make sure to add the new md file to `_config.yml #include section`, e.g. `- docs/contact_page.md`, and add a hyperlink in README.md to it, e.g. `[Contact Page](docs/contact_page.html)` **Attention** It has to be .html suffix in the hyperlink. Github Page will automatically convert *.md* file to *.html* file
 
-**Spec Update:** The API specification is located at *docs/spec.yaml*. Recommend to use Open API Editor [StopLight Studio](https://github.com/stoplightio/studio/releases) to make changes. When finish editing, run *./compile-spec.sh* which will compile the yaml file and produce a zero dependency static HTML file named *spec.html* in docs folder, which will be used in Github Page. Make sure to checkin both *spec.yaml* and *spec.html* file to Github repo.
+**Spec Update:** The API specification is located at `docs/spec.yaml`. Recommend to use Open API Editor [StopLight Studio](https://github.com/stoplightio/studio/releases) to make changes. When finish editing, run `./compile-spec.sh` which will compile the yaml file and produce a zero dependency static HTML file named `spec.html` in docs folder, which will be used in Github Page. Make sure to checkin both `spec.yaml` and `spec.html` file to Github repo.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -169,7 +183,7 @@ information.
 
 - Kevin Liao - [kevliao@mit.edu](mailto:kevliao@mit.edu)
 - Quinn Magendanz - [qpm3@mit.edu](mailto:qpm3@mit.edu)
-- Dean Wen - [dianwen@mit.edu](mailto:dianwen@mit.edu)
+- Dean Wen - [dianwen@mit.edu](mailto:dianwen@mit.edu)˜
 - Daniel Weitzner - [weitzner@mit.edu](mailto:weitzner@mit.edu)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

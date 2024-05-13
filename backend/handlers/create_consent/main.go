@@ -23,7 +23,7 @@ var dynamodbService *dynamodb.Client
 func init() {
 	log.Printf("Service Starting")
 	r := gin.Default()
-	r.POST("/policy", ConsentCreationHandler)
+	r.POST("/create-consent", CreateConsentHandler)
 	ginLambda = ginadapter.New(r)
 
 	// build the required scan params
@@ -43,7 +43,7 @@ func main() {
 	lambda.Start(HandleRequest)
 }
 
-func ConsentCreationHandler(c *gin.Context) {
+func CreateConsentHandler(c *gin.Context) {
 	var requestBody models.ConsentRequest
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, "empty request body")
