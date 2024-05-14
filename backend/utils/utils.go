@@ -8,6 +8,7 @@ import (
 	"reflect"
 )
 
+// MakeDynoNotation takes a struct and returns a pointer to DynoNotation
 func MakeDynoNotation(obj interface{}) (models.DynoNotation, error) {
 	avMap, err := attributevalue.MarshalMap(obj)
 	if err != nil {
@@ -21,7 +22,7 @@ func MakeDynoNotation(obj interface{}) (models.DynoNotation, error) {
 	return dynoNotation, nil
 }
 
-// UnmarshalDynoNotation takes a DynoNotation and a pointer to the struct you want to fill.
+// UnmarshalDynoNotation takes a DynoNotation and a pointer to the struct.
 func UnmarshalDynoNotation(dynoNotation models.DynoNotation, out interface{}) error {
 	if reflect.TypeOf(out).Kind() != reflect.Ptr {
 		return fmt.Errorf("out argument must be a pointer to a struct")

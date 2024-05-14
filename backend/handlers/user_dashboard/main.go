@@ -36,6 +36,7 @@ func UserDashboardHandler(c *gin.Context) {
 		return
 	}
 
+	//Query all consents
 	queryResult := db.QueryByDataSubject(db.TableConsent, db.IndexDataSubject, requestBody.DataSubject)
 
 	// Convert the query results to a slice of ConsentDAO
@@ -50,5 +51,6 @@ func UserDashboardHandler(c *gin.Context) {
 		allConsents = append(allConsents, consent)
 	}
 
+	//TODO: ADD IMPLEMENTATION TO QUERY ALL USAGE, SHARING, VIOLATIONS
 	c.JSON(http.StatusOK, allConsents)
 }
