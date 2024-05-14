@@ -1,11 +1,11 @@
-service: traceability-service
+service: otrace-service
 frameworkVersion: '3'
 
 provider:
   name: aws
   runtime: provided.al2
   architecture: arm64
-  region: us-west-1
+  region: us-west-2
   stage: sandbox
   iamRoleStatements:
     - Effect: "Allow"
@@ -22,7 +22,7 @@ plugins:
 
 custom:
   go:
-    supportedRuntimes: ["provided.al2"]
+    supportedRuntimes: [ "provided.al2" ]
     buildProvidedRuntimeAsBootstrap: true
 
 package:
@@ -80,12 +80,19 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: tracingTable
+        BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: trace_id
+            AttributeType: S
+          - AttributeName: data_subject
             AttributeType: S
         KeySchema:
           - AttributeName: trace_id
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: DataSubjectIndex
+            KeySchema:
+              - AttributeName: data_subject
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL

@@ -1,4 +1,4 @@
-module traceability_service
+module otrace_service
 
 go 1.22.0
 
@@ -6,7 +6,8 @@ require (
 	github.com/aws/aws-lambda-go v1.46.0
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.13.15
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.1
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
@@ -18,6 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect

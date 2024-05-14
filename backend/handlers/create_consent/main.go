@@ -2,38 +2,25 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"log"
 	"net/http"
-	"traceability_service/models"
+	"otrace_service/config"
+	"otrace_service/models"
+	"otrace_service/utils"
 )
 
 var ginLambda *ginadapter.GinLambda
-var dynamodbService *dynamodb.Client
 
 func init() {
 	log.Printf("Service Starting")
 	r := gin.Default()
 	r.POST("/create-consent", CreateConsentHandler)
 	ginLambda = ginadapter.New(r)
-
-	// build the required scan params
-	fmt.Println("DB Connect:")
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-1"))
-	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
-	}
-	// using the config value, create the dynamodb client
-	dynamodbService = dynamodb.NewFromConfig(cfg)
 }
 
 func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -51,30 +38,43 @@ func CreateConsentHandler(c *gin.Context) {
 	}
 
 	traceID := uuid.NewString()
-
-	//put into db
-	_, err := dynamodbService.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String("tracingTable"),
-		Item: map[string]types.AttributeValue{
-			"trace_id": &types.AttributeValueMemberS{Value: traceID},
-		},
-	})
+	consent := mapRequestToConsentDAO(requestBody, traceID)
+	consentDBItem, err := utils.MakeDynoNotation(consent)
 	if err != nil {
-		log.Printf("could not put the dyanmodb table! error: %v", err)
-	} else {
-		log.Printf("Item added successfully with trace_id: %v", traceID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	// Define the input parameters for the Scan operation
-	input := &dynamodb.ScanInput{
-		TableName: aws.String("tracingTable"),
-	}
-
-	// Execute the Scan operation
-	result, err := dynamodbService.Scan(context.TODO(), input)
+	err = db.PutItem(db.TableConsent, consentDBItem)
 	if err != nil {
-		log.Fatalf("failed to scan table, %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusCreated, result.Items)
+	c.JSON(http.StatusCreated, traceID)
+}
+
+func mapRequestToConsentDAO(request models.CreateConsentRequest, traceId string) models.ConsentDAO {
+	return models.ConsentDAO{
+		TraceID:     traceId,
+		Timestamp:   request.Timestamp,
+		DataSubject: request.DataSubject,
+		Description: request.Description,
+		Consents:    mapDataRecords(request.Consents),
+		ParentIDS:   request.ParentIDS,
+		TraceURI:    request.TraceURI,
+		TraceCERT:   request.TraceCERT,
+	}
+}
+
+func mapDataRecords(records []models.DataRecord) []models.RecordDAO {
+	result := make([]models.RecordDAO, len(records))
+	for i, record := range records {
+		result[i] = models.RecordDAO{
+			Category: record.Category,
+			Uses:     record.Uses,
+			Subject:  record.Subject,
+		}
+	}
+	return result
 }

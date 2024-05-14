@@ -8,6 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	db "otrace_service/config"
+	"otrace_service/models"
+	"otrace_service/utils"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -27,6 +30,25 @@ func main() {
 }
 
 func UserDashboardHandler(c *gin.Context) {
-	//TODO: ADD IMPLEMENTATION
-	c.JSON(http.StatusNotImplemented, "API Not Implemented")
+	var requestBody models.UserDashboardRequest
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	queryResult := db.QueryByDataSubject(db.TableConsent, db.IndexDataSubject, requestBody.DataSubject)
+
+	// Convert the query results to a slice of ConsentDAO
+	var allConsents []models.ConsentDAO
+	for _, item := range queryResult.Items {
+		var consent models.ConsentDAO
+		err := utils.UnmarshalDynoNotation(item, &consent)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		allConsents = append(allConsents, consent)
+	}
+
+	c.JSON(http.StatusOK, allConsents)
 }
