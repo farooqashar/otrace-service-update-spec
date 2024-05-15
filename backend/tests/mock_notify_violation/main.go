@@ -15,7 +15,7 @@ var ginLambda *ginadapter.GinLambda
 func init() {
 	log.Printf("Service Starting")
 	r := gin.Default()
-	r.POST("/notify-violation", NotifyViolationHandler)
+	r.POST("/mock-data-recipient/notify-violation", NotifyViolationHandler)
 	ginLambda = ginadapter.New(r)
 }
 
@@ -27,6 +27,6 @@ func main() {
 }
 
 func NotifyViolationHandler(c *gin.Context) {
-	//TODO: ADD IMPLEMENTATION
+	//TODO: ADD MOCK DATA RECIPIENT IMPLEMENTATION
 	c.JSON(http.StatusNotImplemented, "API Not Implemented")
 }

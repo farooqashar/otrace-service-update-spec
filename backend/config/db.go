@@ -35,12 +35,34 @@ func PutItem(tableName string, item models.DynoNotation) (err error) {
 
 // GetItem returns an item if found based on the key provided.
 // the key could be either a primary or composite key and values map.
-func GetItem(tableName string, key models.DynoNotation) (item models.DynoNotation, err error) {
-	resp, err := dbClient.GetItem(context.TODO(), &dynamodb.GetItemInput{Key: key, TableName: aws.String(tableName)})
+func GetItem(tableName string, traceID string) (item models.DynoNotation, err error) {
+	resp, err := dbClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]types.AttributeValue{
+			"trace_id": &types.AttributeValueMemberS{Value: traceID},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 	return resp.Item, nil
+}
+
+// DeleteItem deletes an item if found based on the key provided.
+// the key could be either a primary or composite key and values map.
+func DeleteItem(tableName string, traceID string) (err error) {
+	_, err = dbClient.DeleteItem(
+		context.TODO(),
+		&dynamodb.DeleteItemInput{
+			TableName: aws.String(tableName),
+			Key: map[string]types.AttributeValue{
+				"trace_id": &types.AttributeValueMemberS{Value: traceID},
+			},
+		})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func QueryByDataSubject(tableName string, indexName string, dataSubject string) *dynamodb.QueryOutput {

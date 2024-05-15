@@ -30,6 +30,9 @@ func main() {
 }
 
 func UserDashboardHandler(c *gin.Context) {
+
+	//TODO: Authorization Check
+
 	var requestBody models.UserDashboardRequest
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -37,11 +40,11 @@ func UserDashboardHandler(c *gin.Context) {
 	}
 
 	//Query all consents
-	queryResult := db.QueryByDataSubject(db.TableConsent, db.IndexDataSubject, requestBody.DataSubject)
+	consentQueryResult := db.QueryByDataSubject(db.TableConsent, db.IndexDataSubject, requestBody.DataSubject)
 
 	// Convert the query results to a slice of ConsentDAO
 	var allConsents []models.ConsentDAO
-	for _, item := range queryResult.Items {
+	for _, item := range consentQueryResult.Items {
 		var consent models.ConsentDAO
 		err := utils.UnmarshalDynoNotation(item, &consent)
 		if err != nil {
@@ -51,6 +54,39 @@ func UserDashboardHandler(c *gin.Context) {
 		allConsents = append(allConsents, consent)
 	}
 
-	//TODO: ADD IMPLEMENTATION TO QUERY ALL USAGE, SHARING, VIOLATIONS
-	c.JSON(http.StatusOK, allConsents)
+	//Query all sharing
+	sharingQueryResult := db.QueryByDataSubject(db.TableDataSharing, db.IndexDataSubject, requestBody.DataSubject)
+
+	// Convert the query results to a slice of ConsentDAO
+	var allSharing []models.DataSharingDAO
+	for _, item := range sharingQueryResult.Items {
+		var sharing models.DataSharingDAO
+		err := utils.UnmarshalDynoNotation(item, &sharing)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		allSharing = append(allSharing, sharing)
+	}
+
+	//Query all usage
+	usageQueryResult := db.QueryByDataSubject(db.TableDataUsage, db.IndexDataSubject, requestBody.DataSubject)
+
+	// Convert the query results to a slice of ConsentDAO
+	var allUsage []models.DataUsageDAO
+	for _, item := range usageQueryResult.Items {
+		var usage models.DataUsageDAO
+		err := utils.UnmarshalDynoNotation(item, &usage)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		allUsage = append(allUsage, usage)
+	}
+
+	response := utils.MapToUserDashboardResponse(allConsents, allSharing, allUsage)
+
+	//TODO: ADD IMPLEMENTATION VIOLATIONS
+
+	c.JSON(http.StatusOK, response)
 }

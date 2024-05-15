@@ -31,6 +31,9 @@ func main() {
 }
 
 func CreateConsentHandler(c *gin.Context) {
+
+	//TODO: Authorization Check
+
 	var requestBody models.CreateConsentRequest
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -38,7 +41,7 @@ func CreateConsentHandler(c *gin.Context) {
 	}
 
 	traceID := uuid.NewString()
-	consent := mapRequestToConsentDAO(requestBody, traceID)
+	consent := utils.MapConsentRequestToConsentDAO(requestBody, traceID)
 	consentDBItem, err := utils.MakeDynoNotation(consent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -51,30 +54,5 @@ func CreateConsentHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, traceID)
-}
-
-func mapRequestToConsentDAO(request models.CreateConsentRequest, traceId string) models.ConsentDAO {
-	return models.ConsentDAO{
-		TraceID:     traceId,
-		Timestamp:   request.Timestamp,
-		DataSubject: request.DataSubject,
-		Description: request.Description,
-		Consents:    mapDataRecords(request.Consents),
-		ParentIDS:   request.ParentIDS,
-		TraceURI:    request.TraceURI,
-		TraceCERT:   request.TraceCERT,
-	}
-}
-
-func mapDataRecords(records []models.DataRecord) []models.RecordDAO {
-	result := make([]models.RecordDAO, len(records))
-	for i, record := range records {
-		result[i] = models.RecordDAO{
-			Category: record.Category,
-			Uses:     record.Uses,
-			Subject:  record.Subject,
-		}
-	}
-	return result
+	c.JSON(http.StatusCreated, utils.MapToCreateConsentResponse(traceID))
 }

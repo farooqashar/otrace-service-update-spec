@@ -8,6 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	db "otrace_service/config"
+	"otrace_service/models"
+	"otrace_service/utils"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -27,6 +30,44 @@ func main() {
 }
 
 func ShareDataHandler(c *gin.Context) {
-	//TODO: ADD IMPLEMENTATION
-	c.JSON(http.StatusNotImplemented, "API Not Implemented")
+
+	//TODO: Authorization Check
+
+	var requestBody models.UseDataRecord
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//Get Consent by TraceId
+	item, err := db.GetItem(db.TableConsent, requestBody.TraceID)
+	if err != nil {
+		return
+	}
+
+	var consent models.ConsentDAO
+	err = utils.UnmarshalDynoNotation(item, &consent)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	//TODO: check if data usage activity in the scope of the consent
+
+	//Create Usage Record
+	dataUsageDAO := utils.MapToDataUsageDAO(requestBody, consent.DataSubject)
+	dataUsageDBItem, err := utils.MakeDynoNotation(dataUsageDAO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	//Store Usage Record to DB
+	err = db.PutItem(db.TableDataUsage, dataUsageDBItem)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, "Created")
 }

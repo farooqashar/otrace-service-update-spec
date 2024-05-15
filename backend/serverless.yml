@@ -10,12 +10,17 @@ provider:
   iamRoleStatements:
     - Effect: "Allow"
       Action:
-        - "dynamodb:Scan"
         - "dynamodb:GetItem"
         - "dynamodb:PutItem"
         - "dynamodb:Query"
+        - "dynamodb:DeleteItem"
       Resource:
-        - "Fn::GetAtt": [ tracingTable, Arn ]
+        - "Fn::GetAtt": [tracingTable, Arn]
+        - "Fn::GetAtt": [usageTable, Arn]
+        - "Fn::GetAtt": [sharingTable, Arn]
+        - "Fn::Join": [ "", [ "Fn::GetAtt": [ tracingTable, Arn ], "/index/*" ] ]
+        - "Fn::Join": [ "", [ "Fn::GetAtt": [ usageTable, Arn ], "/index/*" ] ]
+        - "Fn::Join": [ "", [ "Fn::GetAtt": [ sharingTable, Arn ], "/index/*" ] ]
 
 plugins:
   - serverless-go-plugin
@@ -68,10 +73,10 @@ functions:
           path: /user-dashboard
           method: POST
   notify_violation:
-    handler: handlers/notify_violation/main.go
+    handler: tests/mock_notify_violation/main.go
     events:
       - http:
-          path: /notify-violation
+          path: /mock-data-recipient/notify-violation
           method: POST
 
 resources:
@@ -80,6 +85,46 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: tracingTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: trace_id
+            AttributeType: S
+          - AttributeName: data_subject
+            AttributeType: S
+        KeySchema:
+          - AttributeName: trace_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DataSubjectIndex
+            KeySchema:
+              - AttributeName: data_subject
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    usageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usageTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: trace_id
+            AttributeType: S
+          - AttributeName: data_subject
+            AttributeType: S
+        KeySchema:
+          - AttributeName: trace_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DataSubjectIndex
+            KeySchema:
+              - AttributeName: data_subject
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    sharingTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: sharingTable
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: trace_id

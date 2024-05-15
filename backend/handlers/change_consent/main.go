@@ -8,6 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	db "otrace_service/config"
+	"otrace_service/models"
+	"otrace_service/utils"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -27,6 +30,40 @@ func main() {
 }
 
 func ChangeConsentHandler(c *gin.Context) {
-	//TODO: ADD IMPLEMENTATION
-	c.JSON(http.StatusNotImplemented, "API Not Implemented")
+
+	//TODO: Authorization Check
+
+	var requestBody models.ChangeConsentRequest
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	item, err := db.GetItem(db.TableConsent, requestBody.TraceID)
+	if err != nil {
+		return
+	}
+
+	var consent models.ConsentDAO
+	err = utils.UnmarshalDynoNotation(item, &consent)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	consent.Consents = utils.MapDataRecords(requestBody.Consents)
+	consent.Description = requestBody.Description
+
+	consentDBItem, err := utils.MakeDynoNotation(consent)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	err = db.PutItem(db.TableConsent, consentDBItem)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "OK")
 }

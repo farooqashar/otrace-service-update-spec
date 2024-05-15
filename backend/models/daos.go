@@ -22,3 +22,19 @@ type RecordDAO struct {
 	Uses     string `dynamodbav:"uses"`
 	Subject  string `dynamodbav:"subject"`
 }
+
+type DataSharingDAO struct {
+	TraceID     string      `dynamodbav:"trace_id"`
+	Timestamp   string      `dynamodbav:"timestamp"`
+	DataSubject string      `dynamodbav:"data_subject"`
+	Description string      `dynamodbav:"description"`
+	DataShared  []RecordDAO `dynamodbav:"data_shared"`
+}
+
+type DataUsageDAO struct {
+	TraceID     string      `dynamodbav:"trace_id"`
+	Timestamp   string      `dynamodbav:"timestamp"`
+	DataSubject string      `dynamodbav:"data_subject"`
+	Description string      `dynamodbav:"description"`
+	DataUsed    []RecordDAO `dynamodbav:"data_used"`
+}

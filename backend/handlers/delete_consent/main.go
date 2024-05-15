@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	db "otrace_service/config"
+	"otrace_service/models"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -27,6 +29,21 @@ func main() {
 }
 
 func DeleteConsentHandler(c *gin.Context) {
-	//TODO: ADD IMPLEMENTATION
-	c.JSON(http.StatusNotImplemented, "API Not Implemented")
+
+	//TODO: Authorization Check
+
+	var requestBody models.DeleteConsentRequest
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := db.DeleteItem(db.TableConsent, requestBody.TraceID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "OK")
+
 }
