@@ -45,17 +45,46 @@ func ShareDataHandler(c *gin.Context) {
 		return
 	}
 
-	var consent models.ConsentDAO
-	err = utils.UnmarshalDynoNotation(item, &consent)
+	var consentDAO models.ConsentDAO
+	err = utils.UnmarshalDynoNotation(item, &consentDAO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	//TODO: check if data sharing activity in the scope of the consent
+	//check if data usage activity in the scope of the consent
+
+	shareDataDAO := utils.MapDataRecords(requestBody.DataShared)
+
+	violationRecordDAOs := utils.CheckActivitiesUnderConsents(consentDAO.Consents, shareDataDAO)
+	if len(violationRecordDAOs) != 0 {
+		log.Printf("violation detected, no consents exists for this data activity")
+
+		violationDAO := models.ViolationDAO{
+			TraceID:      requestBody.TraceID,
+			Timestamp:    requestBody.Timestamp,
+			DataSubject:  consentDAO.DataSubject,
+			Description:  requestBody.Description,
+			DataViolated: violationRecordDAOs,
+		}
+
+		//Create Violation Record
+		dataViolationDBItem, err := utils.MakeDynoNotation(violationDAO)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		//Store Violation Record to DB
+		err = db.PutItem(db.TableDataViolation, dataViolationDBItem)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
 	//Create Sharing Record
-	dataSharingDAO := utils.MapToDataSharingDAO(requestBody, consent.DataSubject)
+	dataSharingDAO := utils.MapToDataSharingDAO(requestBody, consentDAO.DataSubject)
 	dataSharingDBItem, err := utils.MakeDynoNotation(dataSharingDAO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
