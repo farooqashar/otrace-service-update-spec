@@ -38,3 +38,11 @@ type DataUsageDAO struct {
 	Description string      `dynamodbav:"description"`
 	DataUsed    []RecordDAO `dynamodbav:"data_used"`
 }
+
+type ViolationDAO struct {
+	TraceID      string      `dynamodbav:"trace_id"`
+	Timestamp    string      `dynamodbav:"timestamp"`
+	DataSubject  string      `dynamodbav:"data_subject"`
+	Description  string      `dynamodbav:"description"`
+	DataViolated []RecordDAO `dynamodbav:"data_violated"`
+}

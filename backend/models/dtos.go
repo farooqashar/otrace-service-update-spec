@@ -70,7 +70,7 @@ type UserDashboardResponse struct {
 	DataConsents   []ConsentRecord   `json:"data_consents" binding:"required"`
 	DataSharing    []ShareDataRecord `json:"data_sharing"`
 	DataUsage      []UseDataRecord   `json:"data_usage"`
-	DataViolations []UseDataRecord   `json:"data_violations"`
+	DataViolations []ViolationRecord `json:"data_violations"`
 }
 
 type NotifyViolationRequest struct {

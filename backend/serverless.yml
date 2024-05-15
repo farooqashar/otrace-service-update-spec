@@ -18,9 +18,11 @@ provider:
         - "Fn::GetAtt": [tracingTable, Arn]
         - "Fn::GetAtt": [usageTable, Arn]
         - "Fn::GetAtt": [sharingTable, Arn]
+        - "Fn::GetAtt": [violationTable, Arn]
         - "Fn::Join": [ "", [ "Fn::GetAtt": [ tracingTable, Arn ], "/index/*" ] ]
         - "Fn::Join": [ "", [ "Fn::GetAtt": [ usageTable, Arn ], "/index/*" ] ]
         - "Fn::Join": [ "", [ "Fn::GetAtt": [ sharingTable, Arn ], "/index/*" ] ]
+        - "Fn::Join": [ "", [ "Fn::GetAtt": [ violationTable, Arn ], "/index/*" ] ]
 
 plugins:
   - serverless-go-plugin
@@ -125,6 +127,26 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: sharingTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: trace_id
+            AttributeType: S
+          - AttributeName: data_subject
+            AttributeType: S
+        KeySchema:
+          - AttributeName: trace_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: DataSubjectIndex
+            KeySchema:
+              - AttributeName: data_subject
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    violationTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: violationTable
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: trace_id

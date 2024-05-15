@@ -86,12 +86,12 @@ func MapToCreateConsentResponse(traceId string) models.CreateConsentResponse {
 	}
 }
 
-func MapToUserDashboardResponse(allConsents []models.ConsentDAO, allSharing []models.DataSharingDAO, allUsage []models.DataUsageDAO) models.UserDashboardResponse {
+func MapToUserDashboardResponse(allConsents []models.ConsentDAO, allSharing []models.DataSharingDAO, allUsage []models.DataUsageDAO, allViolations []models.ViolationDAO) models.UserDashboardResponse {
 	return models.UserDashboardResponse{
 		DataConsents:   convertConsentDAOsToConsentRecords(allConsents),
 		DataSharing:    convertDataSharingDAOsToShareDataRecords(allSharing),
 		DataUsage:      convertDataUsageDAOsToUseDataRecords(allUsage),
-		DataViolations: nil,
+		DataViolations: convertDataViolationsDAOsToUseDataRecords(allViolations),
 	}
 }
 
@@ -164,4 +164,52 @@ func convertDataUsageDAOsToUseDataRecords(daos []models.DataUsageDAO) []models.U
 	}
 
 	return records
+}
+
+// convertDataUsageDAOsToUseDataRecords converts a list of DataUsageDAO to a list of UseDataRecord
+func convertDataViolationsDAOsToUseDataRecords(daos []models.ViolationDAO) []models.ViolationRecord {
+	var records []models.ViolationRecord
+
+	for _, dao := range daos {
+		var violations []models.DataRecord
+		for _, record := range dao.DataViolated {
+			violations = append(violations, models.DataRecord{
+				Category: record.Category,
+				Uses:     record.Uses,
+				Subject:  record.Subject,
+			})
+		}
+		records = append(records, models.ViolationRecord{
+			TraceID:     dao.TraceID,
+			Timestamp:   dao.Timestamp,
+			Description: dao.Description,
+			Violations:  violations,
+		})
+	}
+
+	return records
+}
+
+// recordMatches checks if two DataRecords match based on Category, Uses
+func recordMatches(consentRecord, activityRecord models.RecordDAO) bool {
+	return consentRecord.Category == activityRecord.Category &&
+		consentRecord.Uses == activityRecord.Uses
+}
+
+// CheckActivitiesUnderConsents checks if all data activity are consented, returns a list of unauthorized data activities
+func CheckActivitiesUnderConsents(consents []models.RecordDAO, dataActivity []models.RecordDAO) []models.RecordDAO {
+	var allViolationRecords []models.RecordDAO
+	for _, share := range dataActivity {
+		isAllowed := false
+		for _, consent := range consents {
+			if recordMatches(consent, share) {
+				isAllowed = true
+				break
+			}
+		}
+		if !isAllowed {
+			allViolationRecords = append(allViolationRecords, share)
+		}
+	}
+	return allViolationRecords
 }

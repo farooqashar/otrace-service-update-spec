@@ -84,9 +84,23 @@ func UserDashboardHandler(c *gin.Context) {
 		allUsage = append(allUsage, usage)
 	}
 
-	response := utils.MapToUserDashboardResponse(allConsents, allSharing, allUsage)
+	//Query all violations
+	violationQueryResult := db.QueryByDataSubject(db.TableDataViolation, db.IndexDataSubject, requestBody.DataSubject)
 
-	//TODO: ADD IMPLEMENTATION VIOLATIONS
+	// Convert the query results to a slice of ConsentDAO
+	var allViolations []models.ViolationDAO
+	for _, item := range violationQueryResult.Items {
+		var violation models.ViolationDAO
+		err := utils.UnmarshalDynoNotation(item, &violation)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		allViolations = append(allViolations, violation)
+	}
+
+	//create user dashboard response
+	response := utils.MapToUserDashboardResponse(allConsents, allSharing, allUsage, allViolations)
 
 	c.JSON(http.StatusOK, response)
 }

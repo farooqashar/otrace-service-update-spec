@@ -9,3 +9,5 @@ const IndexDataSubject string = "DataSubjectIndex"
 const TableDataSharing string = "sharingTable"
 
 const TableDataUsage string = "usageTable"
+
+const TableDataViolation string = "violationTable"
