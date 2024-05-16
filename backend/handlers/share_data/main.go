@@ -11,6 +11,7 @@ import (
 	db "otrace_service/config"
 	"otrace_service/models"
 	"otrace_service/utils"
+	"slices"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -60,13 +61,20 @@ func ShareDataHandler(c *gin.Context) {
 	if len(violationRecordDAOs) != 0 {
 		log.Printf("violation detected, no consents exists for this data activity")
 
-		violationDAO := models.ViolationDAO{
-			TraceID:      requestBody.TraceID,
-			Timestamp:    requestBody.Timestamp,
-			DataSubject:  consentDAO.DataSubject,
-			Description:  requestBody.Description,
-			DataViolated: violationRecordDAOs,
+		//Get Existing Violations by TraceId
+		item, err := db.GetItem(db.TableDataViolation, requestBody.TraceID)
+		if err != nil {
+			return
 		}
+
+		var violationDAO models.ViolationDAO
+		err = utils.UnmarshalDynoNotation(item, &violationDAO)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		violationDAO.DataViolated = slices.Concat(violationDAO.DataViolated, violationRecordDAOs)
 
 		//Create Violation Record
 		dataViolationDBItem, err := utils.MakeDynoNotation(violationDAO)
