@@ -496,6 +496,39 @@ paths:
         - Data
       description: |
         This endpoint should be implemented by both Data Recipient and Data Provider, and invoked by the OTrace Service. It indicates OTrace Service detected one or more data violation activities occured on existing consents. The recipient of this notification must acknowledge the request by sending a response signed by its signing key for the proof of delivery. The notification shall trigger data cleaning and remediation procedures in violation parties system.
+  /1/1/health-check:
+    get:
+      summary: Health Check
+      operationId: get-1-1-health-check
+      responses:
+        '200':
+          description: OK - Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Status of the service
+                    enum:
+                      - healthy
+                      - degraded
+                      - down
+                  timestamp:
+                    type: string
+                    description: ISO 8601 timestamp indicating the time of the health check
+              examples:
+                example:
+                  value:
+                    status: healthy
+                    timestamp: '2024-12-09T12:00:00Z'
+        '503':
+          description: Service Unavailable
+      tags:
+        - Health
+      description: |
+        This endpoint can be used to check the operational health of the OTrace service. It returns a simple status indicating whether the service is operational, degraded, or down.
 components:
   schemas:
     consent:
